@@ -1,0 +1,61 @@
+stages:
+- stage: validate
+  jobs:
+  - job: validate
+    continueOnError: false
+    steps:
+    - task: TerraformInstaller@0
+      displayName: 'install'
+      inputs:
+        terraformVersion: 'latest'
+    - task: TerraformTaskV2@2
+      displayName: 'init'
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        backendServiceArm: 'Free Trial(62a74f08-c4ec-4c6a-8379-32007cd69139)'
+        backendAzureRmResourceGroupName: 'DefaultResourceGroup-CUS'
+        backendAzureRmStorageAccountName: 'interviewvasindran'
+        backendAzureRmContainerName: 'interviewcontainer'
+        backendAzureRmKey: 'terraform.tfstate'
+    - task: TerraformTaskV2@2
+      displayName: 'validate'
+      inputs:
+        provider: 'azurerm'
+        command: 'validate'
+- stage: deploy
+  jobs:
+    - deployment: deploy_terraform
+      continueOnError: false
+      environment: 'dev'
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - checkout: self
+              - task: TerraformInstaller@0
+                displayName: 'install'
+                inputs:
+                  terraformVersion: 'latest'
+              - task: TerraformTaskV2@2
+                displayName: 'init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  backendServiceArm: 'Free Trial(62a74f08-c4ec-4c6a-8379-32007cd69139)'
+                  backendAzureRmResourceGroupName: 'DefaultResourceGroup-CUS'
+                  backendAzureRmStorageAccountName: 'interviewvasindran'
+                  backendAzureRmContainerName: 'interviewcontainer'
+                  backendAzureRmKey: 'terraform.tfstate'
+              - task: TerraformTaskV2@2
+                displayName: 'plan'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'plan'
+                  environmentServiceNameAzureRM: 'Free Trial(62a74f08-c4ec-4c6a-8379-32007cd69139)'
+              - task: TerraformTaskV2@2
+                displayName: 'apply'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'apply'
+                  environmentServiceNameAzureRM: 'Free Trial(62a74f08-c4ec-4c6a-8379-32007cd69139)'
